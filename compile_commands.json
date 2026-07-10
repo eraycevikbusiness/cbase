@@ -1,0 +1,7 @@
+[
+  {
+    "directory": "/Users/eray/Desktop/cbase",
+    "file": "src/linked_list.c",
+    "arguments": ["clang", "-Iinclude", "-c", "src/linked_list.c"]
+  }
+]
