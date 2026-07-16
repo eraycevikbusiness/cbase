@@ -35,7 +35,7 @@ cb_string_t cb_string_new() {
   return s;
 }
 
-cb_string_t cb_string_from(char *from) {
+cb_string_t cb_string_from(const char *from) {
   cb_string_t s;
   size_t f_len = cb_strlen(from);
   size_t cap = DEFAULT_CAPACITY;
@@ -56,13 +56,23 @@ cb_string_t cb_string_from(char *from) {
   return s;
 }
 
+cb_string_t cb_string_clone(const cb_string_t *subject) {
+  cb_string_t clone = cb_string_new();
+
+  for (size_t i = 0; i < subject->len;i++){
+    cb_string_push(&clone, subject->data[i]);
+  }
+
+  return clone;
+}
+
 void cb_string_push(cb_string_t *p, char c) {
   if (!cb_string_reserve(p, p->len + 2)) return;
   p->data[p->len++] = c;
   p->data[p->len] = '\0';
 }
 
-void cb_string_push_str(cb_string_t *p, char *s) {
+void cb_string_push_str(cb_string_t *p, const char *s) {
   size_t s_len = cb_strlen(s);
   if (!cb_string_reserve(p, p->len + s_len + 1)) return;
   for (size_t i = 0; i < s_len;i++) {
@@ -72,7 +82,7 @@ void cb_string_push_str(cb_string_t *p, char *s) {
   p->data[p->len] = '\0';
 }
 
-int cb_string_contains(cb_string_t *p, char c) {
+int cb_string_contains(const cb_string_t *p, char c) {
   for (size_t i = 0; i < p->len; i++) {
     if (p->data[i] == c) {
       return 1;
@@ -82,7 +92,7 @@ int cb_string_contains(cb_string_t *p, char c) {
   return 0;
 }
 
-int cb_string_contains_str(cb_string_t *p, char *s) {
+int cb_string_contains_str(const cb_string_t *p, const char *s) {
   size_t s_len = cb_strlen(s);
   if (s_len == 0) return 1;
   if (s_len > p->len) return 0;
@@ -96,19 +106,37 @@ int cb_string_contains_str(cb_string_t *p, char *s) {
   return 0;
 }
 
-int cb_string_is_empty(cb_string_t *p) {
+int cb_string_is_empty(const cb_string_t *p) {
   return p->len == 0;
 }
 
-size_t cb_string_len(cb_string_t *p) {
+int cb_string_equals(const cb_string_t *a, const cb_string_t *b) {
+  if (a->len != b->len) return 0;
+
+  for (size_t i = 0; i < a->len;i++){
+    if (a->data[i] != b->data[i]) return 0;
+  }
+
+  return 1;
+}
+
+size_t cb_string_len(const cb_string_t *p) {
   return p->len;
 }
 
-char cb_string_get_at(cb_string_t *p, size_t index) {
+char cb_string_get_at(const cb_string_t *p, size_t index) {
   if (index > p->len) {
     perror("Index is out of bounds");
   }
   return p->data[index];
+}
+
+const char *cb_string_as_cstr(const cb_string_t *p) {
+  return p->data;
+}
+
+void cb_string_pop(cb_string_t *p) {
+  if (p->len > 0) p->len--;
 }
 
 void cb_string_clear(cb_string_t *p) {
@@ -116,7 +144,7 @@ void cb_string_clear(cb_string_t *p) {
   p->data[0] = '\0'; 
 }
 
-void cb_string_print(cb_string_t *p) {
+void cb_string_print(const cb_string_t *p) {
   printf("%s \n", p->data);
 }
 

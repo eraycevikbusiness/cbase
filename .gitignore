@@ -1,10 +1,10 @@
 # Build output
 build/
-cbase
+
 
 # Editor / tooling
 .cache/
-compile_commands.json
+
 
 # macOS
 .DS_Store
