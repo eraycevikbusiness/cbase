@@ -61,10 +61,12 @@ int main(void) {
   cb_vec_free(&v);
   cb_vec_free(&w);
   cb_vec_free(&x);
+  cb_vec_free(&z);
   assert(v.data == NULL);
   assert(w.data == NULL);
   assert(x.data == NULL);
-
+  assert(z.data == NULL);
+  
   printf("vec tests passed\n");
   return 0;
 }
