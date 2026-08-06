@@ -1,6 +1,6 @@
 # cbase — a small C base library
 #
-#   make        Build build/libcbase.a and the example (build/main)
+#   make        Build build/libcbase.a plus one binary per examples/*.c
 #   make test   Build and run everything in tests/
 #   make clean  Delete build/
 #
@@ -12,28 +12,30 @@ ifeq ($(OS),Windows_NT)
 EXE := .exe
 endif
 
-# -MMD makes the compiler record which headers each .c pulled in.
-CFLAGS := -std=c11 -Wall -Wextra -Iinclude -MMD
+CFLAGS := -std=c11 -Wall -Wextra -Iinclude
 
-# Every src/*.c gets a matching build/*.o. $(CC) defaults to cc.
-OBJS := $(patsubst src/%.c,build/%.o,$(wildcard src/*.c))
+# Every src/*.c becomes a build/*.o; every examples/*.c its own program.
+OBJS  := $(patsubst src/%.c,build/%.o,$(wildcard src/*.c))
+DEMOS := $(patsubst examples/%.c,build/%$(EXE),$(wildcard examples/*.c))
 
-all: build/main$(EXE)
+all: $(DEMOS)
 
-# Read those recorded header lists, so editing a header rebuilds what uses
-# it. The leading '-' means "skip silently if the files do not exist yet".
+# -MMD (below) makes the compiler note which headers each .c pulled in.
+# Reading those notes back here is what makes editing a header rebuild
+# whatever uses it. The leading '-' means "skip if not generated yet".
 -include $(OBJS:.o=.d)
 
-# $< is the .c input, $@ is the .o output.
+# $< is the .c input, $@ is the .o output. -MMD belongs only here: the link
+# step would write the same .d filenames and clobber these.
 build/%.o: src/%.c
 	@mkdir -p build
-	$(CC) $(CFLAGS) -c $< -o $@
+	$(CC) $(CFLAGS) -MMD -c $< -o $@
 
 build/libcbase.a: $(OBJS)
 	ar rcs $@ $(OBJS)
 
 # $^ is every prerequisite: the example source plus the library.
-build/main$(EXE): examples/main.c build/libcbase.a
+build/%$(EXE): examples/%.c build/libcbase.a
 	$(CC) $(CFLAGS) $^ -o $@
 
 # Each test file has its own main(), so they are built one at a time.
