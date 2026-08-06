@@ -1,7 +1,0 @@
-[
-  {"directory": "/Users/eray/Desktop/cbase", "file": "src/list.c", "command": "cc -std=c11 -Wall -Wextra -Iinclude -c src/list.c"},
-  {"directory": "/Users/eray/Desktop/cbase", "file": "src/string.c", "command": "cc -std=c11 -Wall -Wextra -Iinclude -c src/string.c"},
-  {"directory": "/Users/eray/Desktop/cbase", "file": "examples/main.c", "command": "cc -std=c11 -Wall -Wextra -Iinclude -c examples/main.c"},
-  {"directory": "/Users/eray/Desktop/cbase", "file": "tests/test_list.c", "command": "cc -std=c11 -Wall -Wextra -Iinclude -c tests/test_list.c"},
-  {"directory": "/Users/eray/Desktop/cbase", "file": "tests/test_string.c", "command": "cc -std=c11 -Wall -Wextra -Iinclude -c tests/test_string.c"}
-]

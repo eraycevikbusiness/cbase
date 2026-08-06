@@ -54,7 +54,7 @@ cb_ll_result_t try_cb_ll_remove_tail(cb_ll_t *p) {
     p->len = 0;
     return SUCCESS;
   }
-  
+
   cb_node_t *current = p->head;
 
   while (current->next != p->tail) {
@@ -85,7 +85,7 @@ void cb_ll_replace_tail_by(cb_ll_t *p, int new_value) {
   new_tail->next = NULL;
 
   if (p->head == p->tail) {
-    
+
   }
 
   cb_node_t *current = p->head;
@@ -98,7 +98,7 @@ void cb_ll_replace_tail_by(cb_ll_t *p, int new_value) {
   current->next = new_tail;
   p->tail = new_tail;
 }
- 
+
 cb_ll_result_t try_cb_ll_get_first_node_by_value(cb_ll_t *lp, int value, cb_node_t **res_node) {
   cb_node_t *current = lp->head;
 
@@ -173,4 +173,4 @@ void cb_ll_free(cb_ll_t *p) {
   }
 
   p->len = 0;
-} 
+}

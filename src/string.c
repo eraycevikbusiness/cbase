@@ -124,7 +124,7 @@ size_t cb_string_len(const cb_string_t *p) {
   return p->len;
 }
 
-char cb_string_get_at(const cb_string_t *p, size_t index) {
+char cb_string_get_at(const cb_string_t *p, size_t index) {
   if (index > p->len) {
     perror("Index is out of bounds");
   }

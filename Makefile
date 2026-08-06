@@ -7,8 +7,14 @@
 #   make tests      Build the test programs (build/tests/)
 #   make test       Build and run the tests
 #   make run        Build and run the first example
-#   make compdb     Generate compile_commands.json (for clangd / editors)
+#   make compdb     Generate compile_commands.json (optional, see below)
 #   make clean      Remove all build output
+#
+# Editor support does not need `make compdb`: .clangd configures the include
+# path with relative flags, so clangd works on a fresh checkout on any
+# machine. compile_commands.json is generated with absolute paths -- it is
+# machine-specific and therefore git-ignored. Generate it only if some other
+# tool requires a compilation database.
 
 # --- Directories -------------------------------------------------------------
 INCLUDE_DIR      := include
@@ -43,7 +49,7 @@ COMPILE_DB   := compile_commands.json
 
 # --- Default target ----------------------------------------------------------
 .PHONY: all
-all: lib examples $(COMPILE_DB)
+all: lib examples
 
 # --- Static library ----------------------------------------------------------
 .PHONY: lib
@@ -77,8 +83,9 @@ $(TEST_BIN_DIR)/%: $(TEST_DIR)/%.c $(LIB)
 test: tests
 	@for t in $(TEST_BINS); do echo "==> $$t"; "$$t" || exit 1; done
 
-# --- Compilation database (for clangd and other editor tooling) --------------
-# Uses absolute paths so headers resolve no matter which subfolder a file is in.
+# --- Compilation database (optional) -----------------------------------------
+# Contains absolute paths, so the result is valid only on the machine that
+# generated it. Git-ignored for that reason -- never commit it.
 .PHONY: compdb
 compdb: $(COMPILE_DB)
 

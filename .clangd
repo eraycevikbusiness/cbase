@@ -1,3 +1,29 @@
 # yaml-language-server: $schema=https://json.schemastore.org/clangd.json
+#
+# Machine-independent clangd setup. No compile_commands.json required, so
+# nothing here contains an absolute path and the config works unchanged on
+# any machine that checks the repository out.
+#
+# Without a compilation database clangd resolves relative flags against the
+# directory of the file being edited -- not the project root. The include
+# path is therefore expressed per-directory. PathMatch patterns are matched
+# against the path relative to this file.
+
 CompileFlags:
-  Add: [-Iinclude, -xc]
+  Add: [-xc, -std=c11, -Wall, -Wextra]
+
+---
+# src/, tests/ and examples/ sit one level below the project root.
+# Matches direct children only: a file in a deeper subdirectory would need
+# its own rule rather than silently getting the wrong include path.
+If:
+  PathMatch: (src|tests|examples)/[^/]*\.c
+CompileFlags:
+  Add: [-I../include]
+
+---
+# Public headers live two levels below the root (include/cbase/*.h).
+If:
+  PathMatch: include/cbase/[^/]*\.h
+CompileFlags:
+  Add: [-I../..]
