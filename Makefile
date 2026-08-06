@@ -1,109 +1,48 @@
-# cbase — a small C base library (linked list + string utilities)
+# cbase — a small C base library
 #
-# Usage:
-#   make            Build the static library and all examples
-#   make lib        Build only the static library (build/libcbase.a)
-#   make examples   Build the example programs (build/examples/)
-#   make tests      Build the test programs (build/tests/)
-#   make test       Build and run the tests
-#   make run        Build and run the first example
-#   make compdb     Generate compile_commands.json (optional, see below)
-#   make clean      Remove all build output
+#   make        Build build/libcbase.a and the example (build/main)
+#   make test   Build and run everything in tests/
+#   make clean  Delete build/
 #
-# Editor support does not need `make compdb`: .clangd configures the include
-# path with relative flags, so clangd works on a fresh checkout on any
-# machine. compile_commands.json is generated with absolute paths -- it is
-# machine-specific and therefore git-ignored. Generate it only if some other
-# tool requires a compilation database.
+# Editors need no setup step: .clangd carries the include path.
 
-# --- Directories -------------------------------------------------------------
-INCLUDE_DIR      := include
-SRC_DIR          := src
-TEST_DIR         := tests
-EXAMPLE_DIR      := examples
+# Windows names executables foo.exe. Without this the target file never
+# matches what the compiler wrote, and make relinks on every run.
+ifeq ($(OS),Windows_NT)
+EXE := .exe
+endif
 
-BUILD_DIR        := build
-OBJ_DIR          := $(BUILD_DIR)/obj
-EXAMPLE_BIN_DIR  := $(BUILD_DIR)/examples
-TEST_BIN_DIR     := $(BUILD_DIR)/tests
+# -MMD makes the compiler record which headers each .c pulled in.
+CFLAGS := -std=c11 -Wall -Wextra -Iinclude -MMD
 
-# --- Toolchain ---------------------------------------------------------------
-CC      := cc
-AR      := ar
-CFLAGS  := -std=c11 -Wall -Wextra -I$(INCLUDE_DIR)
-ARFLAGS := rcs
+# Every src/*.c gets a matching build/*.o. $(CC) defaults to cc.
+OBJS := $(patsubst src/%.c,build/%.o,$(wildcard src/*.c))
 
-# --- Files -------------------------------------------------------------------
-LIB          := $(BUILD_DIR)/libcbase.a
-SRCS         := $(wildcard $(SRC_DIR)/*.c)
-OBJS         := $(patsubst $(SRC_DIR)/%.c,$(OBJ_DIR)/%.o,$(SRCS))
+all: build/main$(EXE)
 
-EXAMPLE_SRCS := $(wildcard $(EXAMPLE_DIR)/*.c)
-EXAMPLE_BINS := $(patsubst $(EXAMPLE_DIR)/%.c,$(EXAMPLE_BIN_DIR)/%,$(EXAMPLE_SRCS))
+# Read those recorded header lists, so editing a header rebuilds what uses
+# it. The leading '-' means "skip silently if the files do not exist yet".
+-include $(OBJS:.o=.d)
 
-TEST_SRCS    := $(wildcard $(TEST_DIR)/*.c)
-TEST_BINS    := $(patsubst $(TEST_DIR)/%.c,$(TEST_BIN_DIR)/%,$(TEST_SRCS))
-
-DB_SRCS      := $(SRCS) $(EXAMPLE_SRCS) $(TEST_SRCS)
-COMPILE_DB   := compile_commands.json
-
-# --- Default target ----------------------------------------------------------
-.PHONY: all
-all: lib examples
-
-# --- Static library ----------------------------------------------------------
-.PHONY: lib
-lib: $(LIB)
-
-$(LIB): $(OBJS)
-	@mkdir -p $(dir $@)
-	$(AR) $(ARFLAGS) $@ $^
-
-$(OBJ_DIR)/%.o: $(SRC_DIR)/%.c
-	@mkdir -p $(dir $@)
+# $< is the .c input, $@ is the .o output.
+build/%.o: src/%.c
+	@mkdir -p build
 	$(CC) $(CFLAGS) -c $< -o $@
 
-# --- Examples ----------------------------------------------------------------
-.PHONY: examples
-examples: $(EXAMPLE_BINS)
+build/libcbase.a: $(OBJS)
+	ar rcs $@ $(OBJS)
 
-$(EXAMPLE_BIN_DIR)/%: $(EXAMPLE_DIR)/%.c $(LIB)
-	@mkdir -p $(dir $@)
-	$(CC) $(CFLAGS) $< $(LIB) -o $@
+# $^ is every prerequisite: the example source plus the library.
+build/main$(EXE): examples/main.c build/libcbase.a
+	$(CC) $(CFLAGS) $^ -o $@
 
-# --- Tests -------------------------------------------------------------------
-.PHONY: tests
-tests: $(TEST_BINS)
-
-$(TEST_BIN_DIR)/%: $(TEST_DIR)/%.c $(LIB)
-	@mkdir -p $(dir $@)
-	$(CC) $(CFLAGS) $< $(LIB) -o $@
-
-.PHONY: test
-test: tests
-	@for t in $(TEST_BINS); do echo "==> $$t"; "$$t" || exit 1; done
-
-# --- Compilation database (optional) -----------------------------------------
-# Contains absolute paths, so the result is valid only on the machine that
-# generated it. Git-ignored for that reason -- never commit it.
-.PHONY: compdb
-compdb: $(COMPILE_DB)
-
-$(COMPILE_DB): $(DB_SRCS) Makefile
-	@echo '[' > $@
-	@first=1; for f in $(DB_SRCS); do \
-	  if [ $$first -eq 1 ]; then first=0; else printf ',\n' >> $@; fi; \
-	  printf '  {"directory": "%s", "file": "%s", "command": "%s %s -c %s"}' \
-	    "$(CURDIR)" "$$f" "$(CC)" "$(CFLAGS)" "$$f" >> $@; \
+# Each test file has its own main(), so they are built one at a time.
+test: build/libcbase.a
+	@for t in tests/*.c; do \
+	  $(CC) $(CFLAGS) $$t build/libcbase.a -o build/t$(EXE) && ./build/t$(EXE) || exit 1; \
 	done
-	@printf '\n]\n' >> $@
-	@echo "Wrote $@ ($(words $(DB_SRCS)) entries)"
 
-# --- Convenience -------------------------------------------------------------
-.PHONY: run
-run: examples
-	@bin=$$(echo $(EXAMPLE_BINS) | awk '{print $$1}'); echo "==> $$bin"; "$$bin"
-
-.PHONY: clean
 clean:
-	rm -rf $(BUILD_DIR)
+	rm -rf build
+
+.PHONY: all test clean
