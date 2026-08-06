@@ -5,6 +5,11 @@
 #   make clean  Delete build/
 #
 # Editors need no setup step: .clangd carries the include path.
+#
+# Needs a POSIX shell, as any make does. On Windows with MSYS2 that means
+# C:\msys64\usr\bin (sh, mkdir, rm) has to be on PATH next to the compiler
+# in C:\msys64\ucrt64\bin -- otherwise make falls back to cmd.exe and only
+# the compile rules work.
 
 # Windows names executables foo.exe. Without this the target file never
 # matches what the compiler wrote, and make relinks on every run.
