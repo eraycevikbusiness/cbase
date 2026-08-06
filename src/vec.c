@@ -1,4 +1,5 @@
 #include "cbase/vec.h"
+#include "cbase/list.h"
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -16,7 +17,7 @@ cb_vec_t cb_vec_new() {
   return cb_vec_new_with_capacity(DEFAULT_CAPACITY);  
 }
 
-void cb_vec_push(cb_vec_t *self, const int *value) {
+void cb_vec_push(cb_vec_t *self, int value) {
   if (self->len >= self->capacity) {
     //realloc
     size_t new_cap = self->capacity * 2;
@@ -25,11 +26,28 @@ void cb_vec_push(cb_vec_t *self, const int *value) {
     self->data = realloc(self->data, sizeof(int) * new_cap);
   }
 
-  self->data[self->len];
+  self->data[self->len] = value;
   self->len++;
   
 }
 
+cb_vec_result_t cb_vec_get(const cb_vec_t *self, size_t index, int *res) {
+  if (index >= self->len) {
+    return CB_VEC_RESULT_ERROR_INDEX_OUT_OF_BOUNDS;
+  }
+
+  *res = self->data[index];
+  return CB_VEC_RESULT_SUCCESS;
+}
+
+cb_vec_result_t cb_vec_set(cb_vec_t *self, size_t index, int value) {
+  if (index >= self->len) {
+    return CB_VEC_RESULT_ERROR_INDEX_OUT_OF_BOUNDS;
+  }
+
+  self->data[index] = value;
+  return CB_VEC_RESULT_SUCCESS;
+}
 
 void cb_vec_print(const cb_vec_t *self) {
   printf("[");
